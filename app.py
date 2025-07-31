@@ -1,4 +1,4 @@
-# Chix & Mati Expense Tracker - Full Features with Edit by Unique ID and Record Lookup
+# Chix & Mati Expense Tracker - Full Features with Edit, Import, Themes, QR Access
 
 import pandas as pd
 from datetime import datetime
@@ -6,6 +6,9 @@ import streamlit as st
 import altair as alt
 import uuid
 from difflib import SequenceMatcher
+import qrcode
+from io import BytesIO
+from PIL import Image
 
 CURRENCY_RATES = {
     "SEK": 1.0,
@@ -40,10 +43,45 @@ if "df" not in st.session_state:
 if "last_state" not in st.session_state:
     st.session_state.last_state = None
 
+# Theme toggle
+mode = st.sidebar.radio("Choose Theme Mode", ["Light", "Dark"])
+st.markdown(f"""
+    <style>
+    .main {{ background-color: {'#f0f0f0' if mode == 'Light' else '#1e1e1e'}; color: {'#000' if mode == 'Light' else '#fff'}; }}
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("Chix & Mati Expense Tracker")
 
+# Currency
 currency = st.selectbox("Select Currency", list(CURRENCY_RATES.keys()), index=0)
 rate = CURRENCY_RATES[currency]
+
+# QR code generator for current app URL (placeholder)
+st.sidebar.markdown("### 📱 Access on Mobile")
+try:
+    url = st.secrets["app_url"] if "app_url" in st.secrets else "https://share.streamlit.io/your_app"
+except:
+    url = "https://share.streamlit.io/your_app"
+qr_img = qrcode.make(url)
+buf = BytesIO()
+qr_img.save(buf)
+st.sidebar.image(Image.open(buf), caption="Scan to open app")
+
+# CSV Import
+st.sidebar.markdown("### 📥 Import CSV")
+uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+if uploaded_file:
+    imported_df = pd.read_csv(uploaded_file)
+    if set(imported_df.columns).issuperset(set(st.session_state.df.columns)):
+        imported_df["Budget Date"] = pd.to_datetime(imported_df["Budget Date"])
+        imported_df["Month"] = imported_df["Budget Date"].dt.strftime("%B")
+        imported_df["Deleted"] = False
+        st.session_state.last_state = st.session_state.df.copy()
+        st.session_state.df = pd.concat([st.session_state.df, imported_df], ignore_index=True)
+        st.success("CSV data imported successfully.")
+    else:
+        st.error("CSV format does not match the expected structure.")
 
 if st.button("🔄 Refresh View"):
     st.experimental_rerun()
@@ -205,4 +243,5 @@ chart = alt.Chart(monthly_melted).mark_bar().encode(
 ).properties(height=400)
 
 st.altair_chart(chart, use_container_width=True)
+
 
