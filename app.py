@@ -53,6 +53,30 @@ st.markdown(f"""
 
 st.title("Chix & Mati Expense Tracker")
 
+# Theme toggle
+mode = st.sidebar.radio("Choose Theme Mode", ["Light", "Dark"])
+st.markdown(f"""
+    <style>
+    body {{
+        background-color: {'#f0f0f0' if mode == 'Light' else '#1e1e1e'};
+        color: {'#000000' if mode == 'Light' else '#ffffff'};
+    }}
+    .stButton>button {{
+        background-color: {'#4CAF50' if mode == 'Light' else '#444444'};
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        font-weight: bold;
+    }}
+    .stSelectbox label, .stTextInput label {{
+        color: {'#000000' if mode == 'Light' else '#ffffff'} !important;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("Chix & Mati Expense Tracker")
+
 # Currency
 currency = st.selectbox("Select Currency", list(CURRENCY_RATES.keys()), index=0)
 rate = CURRENCY_RATES[currency]
@@ -80,6 +104,10 @@ if uploaded_file:
         st.session_state.last_state = st.session_state.df.copy()
         st.session_state.df = pd.concat([st.session_state.df, imported_df], ignore_index=True)
         st.success("CSV data imported successfully.")
+
+        # Show preview
+        with st.expander("📄 Preview Imported Data"):
+            st.dataframe(imported_df)
     else:
         st.error("CSV format does not match the expected structure.")
 
