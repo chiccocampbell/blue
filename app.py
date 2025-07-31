@@ -134,4 +134,75 @@ with st.expander("Edit Record"):
                 st.success("Changes saved!")
                 st.experimental_rerun()
 
-# Remaining code (deletion, export, summaries, visualization)...
+# Deletion & Archive
+st.subheader("Manage Expenses")
+with st.expander("Archive/Delete Expenses"):
+    archive_ids = st.multiselect(
+        "Select expenses to archive",
+        options=filtered_df["ID"],
+        format_func=lambda i: f"{filtered_df.loc[filtered_df['ID'] == i, 'Item'].values[0]} ({i[:6]}...)"
+    )
+    if st.button("Confirm Archive"):
+        st.session_state.last_state = st.session_state.df.copy()
+        st.session_state.df.loc[st.session_state.df["ID"].isin(archive_ids), "Deleted"] = True
+        st.success("Selected expenses archived.")
+        st.experimental_rerun()
+
+    if st.session_state.last_state is not None:
+        if st.button("Undo Last Action"):
+            st.session_state.df = st.session_state.last_state.copy()
+            st.session_state.last_state = None
+            st.success("Previous changes undone.")
+            st.experimental_rerun()
+
+# Currency conversion
+converted_df = filtered_df.copy()
+converted_df[["Total", "Chix", "Matilda"]] *= rate
+
+def highlight_expense(val):
+    return 'background-color: #ff9933' if val > 3000 * rate else ''
+
+# Display filtered table
+st.subheader("Filtered Expenses")
+st.dataframe(converted_df.style.applymap(highlight_expense, subset=["Total"]))
+
+# CSV Export
+st.download_button(
+    label="Download Filtered Data as CSV",
+    data=converted_df.to_csv(index=False).encode("utf-8"),
+    file_name="chix_mati_expenses_filtered.csv",
+    mime="text/csv"
+)
+
+# Summary
+st.subheader("Summary")
+
+total_by_person = converted_df[["Chix", "Matilda"]].sum()
+total_by_category = converted_df.groupby("Category")["Total"].sum()
+net_balance = total_by_person["Chix"] - total_by_person["Matilda"]
+
+st.write("### Total Spending by Person")
+st.write(total_by_person)
+
+st.write("### Total Spending by Category")
+st.write(total_by_category)
+
+st.write("### Net Balance")
+st.markdown(f"**Chix - Matilda = {net_balance:.2f} {currency}**")
+st.caption("This shows how much more or less Chix has paid compared to Matilda. Positive means Chix has paid more; negative means Matilda has paid more.")
+
+# Visualization
+st.subheader("Monthly Spending by Person")
+
+monthly_summary = converted_df.groupby("Month")[["Chix", "Matilda"]].sum().reset_index()
+monthly_melted = monthly_summary.melt(id_vars="Month", var_name="Person", value_name="Amount")
+
+chart = alt.Chart(monthly_melted).mark_bar().encode(
+    x="Month:N",
+    y="Amount:Q",
+    color="Person:N",
+    tooltip=["Month", "Person", "Amount"]
+).properties(height=400)
+
+st.altair_chart(chart, use_container_width=True)
+
