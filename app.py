@@ -5,6 +5,7 @@ from datetime import datetime
 import streamlit as st
 import altair as alt
 import uuid
+from difflib import SequenceMatcher
 
 CURRENCY_RATES = {
     "SEK": 1.0,
@@ -89,21 +90,19 @@ if not show_deleted:
 st.subheader("Edit Existing Expense")
 with st.expander("Edit Record"):
     st.caption("Use the record table below to find the ID for editing. You can also search for a specific item below.")
-    from difflib import SequenceMatcher
+    search_term = st.text_input("Search (natural language supported)")
 
-search_term = st.text_input("Search (natural language supported)")
+    if search_term:
+        def fuzzy_match(row):
+            row_text = ' '.join([str(v).lower() for v in row.values])
+            return SequenceMatcher(None, search_term.lower(), row_text).ratio() > 0.3
 
-if search_term:
-    def fuzzy_match(row):
-        row_text = ' '.join([str(v).lower() for v in row.values])
-        return SequenceMatcher(None, search_term.lower(), row_text).ratio() > 0.3
+        search_df = filtered_df[filtered_df.apply(fuzzy_match, axis=1)]
+    else:
+        search_df = filtered_df
 
-    search_df = filtered_df[filtered_df.apply(fuzzy_match, axis=1)]
-else:
-    search_df = filtered_df
+    st.dataframe(search_df[["ID", "Item", "Total", "Chix", "Matilda", "Priority", "Budget Date"]])
 
-st.dataframe(search_df[["ID", "Item", "Total", "Chix", "Matilda", "Priority", "Budget Date"]])
-    st.dataframe(filtered_df[["ID", "Item", "Total", "Chix", "Matilda", "Priority", "Budget Date"]])
     selected_id = st.text_input("Enter ID of the record to edit")
     if selected_id in filtered_df["ID"].values:
         row_to_edit = filtered_df[filtered_df["ID"] == selected_id].index[0]
