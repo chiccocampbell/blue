@@ -43,8 +43,8 @@ if "user" not in st.session_state:
     st.stop()
 else:
     avatar = "https://i.imgur.com/jRjzdhE.png" if st.session_state.user == "Chix" else "https://i.imgur.com/Z7AzH2c.png"
-st.sidebar.image(avatar, width=60)
-st.sidebar.success(f"Logged in as {st.session_state.user}")
+    st.sidebar.image(avatar, width=60)
+    st.sidebar.success(f"Logged in as {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
         st.experimental_rerun()
