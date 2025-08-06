@@ -35,11 +35,9 @@ st.markdown(f'''
     </style>
 ''', unsafe_allow_html=True)
 
-if "user" not in st.session_state:
+if "user" not in st.session_state or st.session_state.user not in ["Chix", "Mati"]:
     username = st.selectbox("Select your name to continue:", ["Chix", "Mati"])
-    if username:
-        st.session_state.user = username
-        st.experimental_rerun()
+    st.session_state.user = username
     st.stop()
 else:
     avatar = "https://i.imgur.com/jRjzdhE.png" if st.session_state.user == "Chix" else "https://i.imgur.com/Z7AzH2c.png"
