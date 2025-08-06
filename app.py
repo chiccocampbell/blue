@@ -43,9 +43,34 @@ else:
     st.sidebar.success(f"Logged in as {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
-        st.rerun()
+        st.experimental_rerun()
 
 # ------------------- APP START ----------------------
+
+# Personalized greeting
+from pytz import timezone
+now_cet = datetime.now(timezone("CET"))
+current_hour = now_cet.hour
+if current_hour < 12:
+    greeting = "Good morning"
+elif current_hour < 18:
+    greeting = "Good afternoon"
+else:
+    greeting = "Good evening"
+
+df_this_month = load_data()
+
+df_this_month = df_this_month[df_this_month["Budget Date"].dt.month == now_cet.month]
+user_column = "Chix" if st.session_state.user == "Chix" else "Matilda"
+total_spent = df_this_month[user_column].sum()
+st.sidebar.markdown(f"## {greeting}, {st.session_state.user}! 💸")
+st.sidebar.markdown(f"**Your spending this month:** {total_spent:.2f} SEK")
+
+CURRENCY_RATES = {
+    "SEK": 1.0,
+    "ZAR (Rand)": 1.8,
+    "EUR": 0.088
+}
 
 @st.cache_data
 def load_data():
@@ -68,29 +93,3 @@ def load_data():
     df["Month"] = df["Budget Date"].dt.strftime("%B")
     df["Deleted"] = False
     return df
-
-# Personalized greeting
-from pytz import timezone
-now_cet = datetime.now(timezone("CET"))
-current_hour = now_cet.hour
-if current_hour < 12:
-    greeting = "Good morning"
-elif current_hour < 18:
-    greeting = "Good afternoon"
-else:
-    greeting = "Good evening"
-
-df_this_month = load_data()
-df_this_month = df_this_month[df_this_month["Budget Date"].dt.month == now_cet.month]
-
-user_column = "Chix" if st.session_state.user == "Chix" else "Matilda"
-total_spent = df_this_month[user_column].sum()
-
-st.sidebar.markdown(f"## {greeting}, {st.session_state.user}! 💸")
-st.sidebar.markdown(f"**Your spending this month:** {total_spent:.2f} SEK")
-
-CURRENCY_RATES = {
-    "SEK": 1.0,
-    "ZAR (Rand)": 1.8,
-    "EUR": 0.088
-}
