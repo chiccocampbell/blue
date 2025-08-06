@@ -40,8 +40,6 @@ if "user" not in st.session_state or st.session_state.user not in ["Chix", "Mati
     st.session_state.user = username
     st.stop()
 else:
-    avatar = "https://i.imgur.com/jRjzdhE.png" if st.session_state.user == "Chix" else "https://i.imgur.com/Z7AzH2c.png"
-    st.sidebar.image(avatar, width=60)
     st.sidebar.success(f"Logged in as {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
@@ -60,10 +58,7 @@ elif current_hour < 18:
 else:
     greeting = "Good evening"
 
-if "df" in st.session_state:
-    df_this_month = st.session_state.df.copy()
-else:
-    df_this_month = load_data()
+df_this_month = load_data()
 
 df_this_month = df_this_month[df_this_month["Budget Date"].dt.month == now_cet.month]
 user_column = "Chix" if st.session_state.user == "Chix" else "Matilda"
