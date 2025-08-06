@@ -43,7 +43,7 @@ else:
     st.sidebar.success(f"Logged in as {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
-        st.experimental_rerun()
+          st.rerun()
 
 # ------------------- APP START ----------------------
 
