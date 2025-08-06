@@ -1,4 +1,4 @@
-# Chix & Mati Expense Tracker - Full Features with Edit, Import, Themes, QR Access
+# Chix & Mati Expense Tracker - Full Features with Login, Edit, Import, Themes, QR Access
 
 import pandas as pd
 from datetime import datetime
@@ -9,6 +9,25 @@ from difflib import SequenceMatcher
 import qrcode
 from io import BytesIO
 from PIL import Image
+import hashlib
+
+# ------------------- SIMPLE LOGIN CONFIG -------------------
+
+st.title("Chix & Mati Expense Tracker")
+
+if "user" not in st.session_state:
+    username = st.text_input("Enter your name to continue:")
+    if username:
+        st.session_state.user = username
+        st.experimental_rerun()
+    st.stop()
+else:
+    st.sidebar.success(f"Logged in as {st.session_state.user}")
+    if st.sidebar.button("Logout"):
+        del st.session_state.user
+        st.experimental_rerun()
+
+# ------------------- APP START ----------------------
 
 CURRENCY_RATES = {
     "SEK": 1.0,
