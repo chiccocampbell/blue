@@ -15,19 +15,62 @@ import hashlib
 
 st.title("Chix & Mati Expense Tracker")
 
+# Theme toggle
+mode = st.sidebar.radio("Choose Theme Mode", ["Light", "Dark"], index=0)
+st.markdown(f"""
+    <style>
+    .main, body {{
+        background-color: {'#ffffff' if mode == 'Light' else '#1e1e1e'};
+        color: {'#000000' if mode == 'Light' else '#ffffff'};
+    }}
+    .stButton>button {{
+        background-color: {'#4CAF50' if mode == 'Light' else '#444444'};
+        color: white;
+        border-radius: 5px;
+        padding: 8px 16px;
+    }}
+    label, .css-1cpxqw2, .css-1kyxreq, .css-1aumxhk {{
+        color: {'#000000' if mode == 'Light' else '#ffffff'} !important;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
 if "user" not in st.session_state:
-    username = st.text_input("Enter your name to continue:")
+    username = st.selectbox("Select your name to continue:", ["Chix", "Mati"])
     if username:
         st.session_state.user = username
         st.experimental_rerun()
     st.stop()
 else:
-    st.sidebar.success(f"Logged in as {st.session_state.user}")
+    avatar = "https://i.imgur.com/jRjzdhE.png" if st.session_state.user == "Chix" else "https://i.imgur.com/Z7AzH2c.png"
+st.sidebar.image(avatar, width=60)
+st.sidebar.success(f"Logged in as {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
         st.experimental_rerun()
 
 # ------------------- APP START ----------------------
+
+# Personalized greeting
+from pytz import timezone
+now_cet = datetime.now(timezone("CET"))
+current_hour = now_cet.hour
+if current_hour < 12:
+    greeting = "Good morning"
+elif current_hour < 18:
+    greeting = "Good afternoon"
+else:
+    greeting = "Good evening"
+
+if "df" in st.session_state:
+    df_this_month = st.session_state.df.copy()
+else:
+    df_this_month = load_data()
+
+df_this_month = df_this_month[df_this_month["Budget Date"].dt.month == now_cet.month]
+total_spent = df_this_month[st.session_state.user].sum()
+st.sidebar.markdown(f"## {greeting}, {st.session_state.user}! 💸")
+st.sidebar.markdown(f"**Your spending this month:** {total_spent:.2f} SEK")
 
 CURRENCY_RATES = {
     "SEK": 1.0,
